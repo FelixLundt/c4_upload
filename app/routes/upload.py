@@ -1,6 +1,4 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for
-import zipfile
-from io import BytesIO
 from app.validator import validate_submission
 from app.storage import save_submission
 

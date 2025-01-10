@@ -3,6 +3,28 @@
 {% block content %}
 <h1>Upload Your Connect 4 Agent</h1>
 
+<div class="instructions">
+    <h2>Submission Instructions</h2>
+    <p>Please submit a ZIP file containing:</p>
+    <ul>
+        <li><code>requirements.txt</code> in the root directory</li>
+        <li>An <code>agent</code> package directory containing:
+            <ul>
+                <li><code>__init__.py</code> that exposes a <code>generate_move(board, player, timeout)</code> function</li>
+                <li>Any additional modules your agent needs</li>
+            </ul>
+        </li>
+    </ul>
+    <p>Example structure:</p>
+    <pre>
+submission.zip/
+├── requirements.txt
+└── agent/
+    ├── __init__.py
+    ├── strategy.py
+    └── utils.py</pre>
+</div>
+
 {% with messages = get_flashed_messages() %}
     {% if messages %}
         {% for message in messages %}
@@ -13,13 +35,8 @@
 
 <form method="post" enctype="multipart/form-data">
     <div>
-        <label for="agent">Agent File (Python):</label>
-        <input type="file" id="agent" name="agent" accept=".py" required>
-    </div>
-    
-    <div>
-        <label for="requirements">Requirements File:</label>
-        <input type="file" id="requirements" name="requirements" accept=".txt" required>
+        <label for="submission">Agent Submission (ZIP file):</label>
+        <input type="file" id="submission" name="submission" accept=".zip" required>
     </div>
     
     <button type="submit">Upload</button>

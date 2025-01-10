@@ -5,10 +5,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <nav>
-        <a href="{{ url_for('upload.upload') }}">Upload</a>
-        <!-- Add more navigation links as we implement them -->
-    </nav>
+    <header>
+        <h1 class="site-title">Connect 4 Tournament</h1>
+        <nav>
+            <a href="#" class="nav-link">Home</a>
+            <a href="{{ url_for('upload.upload') }}" class="nav-link">Upload Agent</a>
+            <!-- Add more navigation links as we implement them -->
+        </nav>
+    </header>
     
     <main>
         {% block content %}{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Upload Your Connect 4 Agent</h1>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<form method="post" enctype="multipart/form-data">
+    <div>
+        <label for="agent">Agent File (Python):</label>
+        <input type="file" id="agent" name="agent" accept=".py" required>
+    </div>
+    
+    <div>
+        <label for="requirements">Requirements File:</label>
+        <input type="file" id="requirements" name="requirements" accept=".txt" required>
+    </div>
+    
+    <button type="submit">Upload</button>
+</form>
+{% endblock %} 

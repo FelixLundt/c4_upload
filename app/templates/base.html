@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Connect 4 Tournament</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav>
+        <a href="{{ url_for('upload.upload') }}">Upload</a>
+        <!-- Add more navigation links as we implement them -->
+    </nav>
+    
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html> 

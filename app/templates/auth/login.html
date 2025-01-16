@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Connect 4 Tournament Login</h1>
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<form method="post">
+    <div>
+        <label for="group_id">Group ID:</label>
+        <input type="text" id="group_id" name="group_id" required>
+        <p class="help">Enter your assigned group ID (e.g., team1, team2)</p>
+    </div>
+    
+    <div>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <p class="help">Enter your assigned password</p>
+    </div>
+    
+    <div class="button-group">
+        <button type="submit">Login</button>
+        <a href="{{ url_for('home.index') }}" class="button cancel">Back to Home</a>
+    </div>
+</form>
+{% endblock %} 

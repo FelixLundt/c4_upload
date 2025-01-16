@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="welcome">
+    <h1>Connect 4 Tournament</h1>
+    <p>Welcome to the Connect 4 Tournament platform.</p>
+    
+    <div class="action-buttons">
+        {% if 'group_id' in session %}
+            <a href="{{ url_for('upload.upload') }}" class="button primary">Upload Your Agent</a>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}" class="button primary">Login to Submit</a>
+        {% endif %}
+    </div>
+    
+    <div class="tournament-info">
+        <h2>Tournament Information</h2>
+        <ul>
+            <li>Submit your Connect 4 playing agent</li>
+            <li>Agents will compete in a round-robin tournament</li>
+            <li>Each team can have up to 2 active submissions</li>
+            <li>Details TBD</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

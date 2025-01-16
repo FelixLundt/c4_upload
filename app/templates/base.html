@@ -1,18 +1,19 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Connect 4 Tournament</title>
+    <title>Connect 4 Tournament - {{ config.DOMAIN }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="canonical" href="https://{{ config.DOMAIN }}{{ request.path }}" />
 </head>
 <body>
-    <header>
-        <h1 class="site-title">Connect 4 Tournament</h1>
-        <nav>
-            <a href="#" class="nav-link">Home</a>
-            <a href="{{ url_for('upload.upload') }}" class="nav-link">Upload Agent</a>
-            <!-- Add more navigation links as we implement them -->
-        </nav>
-    </header>
+    <nav>
+        <a href="{{ url_for('home.index') }}">Home</a>
+        {% if 'group_id' in session %}
+            <a href="{{ url_for('upload.upload') }}">Upload</a>
+        {% else %}
+            <a href="{{ url_for('auth.login') }}">Login</a>
+        {% endif %}
+    </nav>
     
     <main>
         {% block content %}{% endblock %}

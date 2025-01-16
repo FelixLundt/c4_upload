@@ -39,73 +39,202 @@ label {
     margin-top: 5px;
 }
 
-button {
-    background: #007bff;
-    color: white;
-    padding: 10px 20px;
+/* Base button styles */
+button,
+.button,
+.delete-button,
+.nav-link {
+    font-size: 1rem;  /* Controls text size */
+    padding: 10px 20px;  /* Controls button size/spacing */
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
 
-button:hover {
-    background: #0056b3;
+/* Default button style (blue) */
+button {
+    background: #007bff;
+    color: white;
 }
 
-.instructions {
-    background: #e9ecef;
-    padding: 20px;
-    border-radius: 4px;
-    margin-bottom: 20px;
+/* Specific button styles */
+.delete-button {
+    background: #dc3545;
+    color: white;
 }
 
-.instructions h2 {
-    margin-top: 0;
-    font-size: 1.2em;
-}
-
-.instructions code {
-    background: #f8f9fa;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-family: monospace;
-}
-
-.instructions pre {
-    background: #f8f9fa;
-    padding: 15px;
-    border-radius: 4px;
-    overflow-x: auto;
-    font-family: monospace;
-}
-
-.instructions ul {
-    margin-bottom: 15px;
-}
-
-.instructions ul ul {
-    margin-top: 5px;
-}
-
-header {
-    margin-bottom: 40px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 20px;
-}
-
-.site-title {
-    margin: 0 0 20px 0;
-    color: #333;
+.button.cancel {
+    background-color: #dc3545;
+    color: white;
+    text-decoration: none;
 }
 
 .nav-link {
     text-decoration: none;
     color: #007bff;
     font-weight: bold;
-    padding: 5px 10px;
     margin-right: 15px;
 }
 
 .nav-link:hover {
     color: #0056b3;
-} 
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.button.cancel {
+    background-color: #dc3545;
+    color: white;
+    text-decoration: none;
+}
+
+.button.cancel:hover {
+    background-color: #c82333;
+}
+
+.current-submissions {
+    background: #fff;
+    padding: 20px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+    border: 1px solid #ddd;
+}
+
+.current-submissions h2 {
+    margin-top: 0;
+    font-size: 1.2em;
+    color: #333;
+}
+
+.warning {
+    color: #856404;
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    padding: 10px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.submissions-list {
+    list-style: none;
+    padding: 0;
+}
+
+.submissions-list li {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: auto;
+}
+
+.submissions-list li:last-child {
+    border-bottom: none;
+}
+
+.submission-name {
+    font-weight: bold;
+}
+
+.submission-time {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.submission-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.delete-form {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    height: auto;
+}
+
+.delete-button {
+    background: #dc3545;
+    color: white;
+}
+
+.delete-button:hover {
+    background: #c82333;
+}
+
+.logout-container {
+    margin-top: 2rem;
+    text-align: center;
+    border-top: 1px solid #eee;
+    padding-top: 2rem;
+}
+
+.button.logout {
+    background-color: #dc3545;
+    color: white;
+    text-decoration: none;
+}
+
+.button.logout:hover {
+    background-color: #c82333;
+}
+
+.welcome {
+    text-align: center;
+    padding: 3rem 0;
+}
+
+.welcome h1 {
+    margin-bottom: 1rem;
+    color: #333;
+    font-size: 2.5rem;
+}
+
+.welcome p {
+    color: #666;
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+}
+
+.action-buttons {
+    margin: 2rem 0;
+}
+
+.button.primary {
+    background: #007bff;
+    color: white;
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.button.primary:hover {
+    background: #0056b3;
+}
+
+.tournament-info {
+    max-width: 600px;
+    margin: 3rem auto;
+    text-align: left;
+    padding: 2rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.tournament-info h2 {
+    color: #333;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.tournament-info ul {
+    color: #666;
+    line-height: 1.6;
+}

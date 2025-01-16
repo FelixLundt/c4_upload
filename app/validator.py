@@ -4,13 +4,7 @@ import importlib.util
 import sys
 from typing import Dict, Any
 import tempfile
-
-# Try to import game logic package
-try:
-    connect4_validator = importlib.import_module('c4utils.agent_interface')
-    GAME_VALIDATOR_AVAILABLE = True
-except ImportError:
-    GAME_VALIDATOR_AVAILABLE = False
+from flask import current_app
 
 def validate_submission(zip_content: bytes) -> Dict[str, Any]:
     """
@@ -19,12 +13,21 @@ def validate_submission(zip_content: bytes) -> Dict[str, Any]:
     2. Python package validity
     3. generate_move function existence and game interface compliance
     """
-    if not GAME_VALIDATOR_AVAILABLE:
+    # Initialize validator
+    try:
+        c4utils_path = current_app.config.get('VALIDATOR_PATH', '../c4utils')
+        sys.path.insert(0, c4utils_path)
+        connect4_validator = importlib.import_module('c4utils.agent_interface')
+    except ImportError:
         return {
             'valid': False,
             'message': 'Game validator package not installed. Please install c4utils package.'
         }
+    finally:
+        if c4utils_path in sys.path:
+            sys.path.remove(c4utils_path)
 
+    # Rest of validation code using connect4_validator
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
             # Extract ZIP contents

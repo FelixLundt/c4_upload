@@ -1,0 +1,11 @@
+runtime: python312
+
+# This tells App Engine how to run your app
+entrypoint: gunicorn -b :$PORT main:app
+
+# Files that should be included
+includes:
+- app/**
+- ../c4utils/c4utils/**
+- requirements.txt
+- main.py 

@@ -18,14 +18,23 @@ def validate_submission(zip_content: bytes) -> Dict[str, Any]:
         c4utils_path = current_app.config.get('VALIDATOR_PATH', '../c4utils')
         sys.path.insert(0, c4utils_path)
         connect4_validator = importlib.import_module('c4utils.agent_interface')
+        sys.path.remove(c4utils_path)
     except ImportError:
         return {
             'valid': False,
             'message': 'Game validator package not installed. Please install c4utils package.'
         }
-    finally:
-        if c4utils_path in sys.path:
-            sys.path.remove(c4utils_path)
+    except UnboundLocalError:
+        return {
+            'valid': False,
+            'message': 'Game validator package not installed. Could not find c4utils package.'
+        }
+    except Exception as e:
+        return {
+            'valid': False,
+            'message': f'Unknown validation error: {str(e)}'
+        }
+            
 
     # Rest of validation code using connect4_validator
     with tempfile.TemporaryDirectory() as temp_dir:

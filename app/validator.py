@@ -5,6 +5,7 @@ import sys
 from typing import Dict, Any
 import tempfile
 from flask import current_app
+import os
 
 def validate_submission(zip_content: bytes) -> Dict[str, Any]:
     """
@@ -15,19 +16,22 @@ def validate_submission(zip_content: bytes) -> Dict[str, Any]:
     """
     # Initialize validator
     try:
-        c4utils_path = current_app.config.get('VALIDATOR_PATH', '../c4utils')
-        sys.path.insert(0, c4utils_path)
+        # In development, add path to sys.path
+        if not os.getenv('GAE_ENV', '').startswith('standard'):
+            c4utils_path = current_app.config.get('VALIDATOR_PATH', '../c4utils')
+            sys.path.insert(0, c4utils_path)
+            
+        # Import the validator module
         connect4_validator = importlib.import_module('c4utils.agent_interface')
-        sys.path.remove(c4utils_path)
-    except ImportError:
+        
+        # Clean up sys.path in development
+        if not os.getenv('GAE_ENV', '').startswith('standard'):
+            sys.path.remove(c4utils_path)
+            
+    except ImportError as e:
         return {
             'valid': False,
-            'message': 'Game validator package not installed. Please install c4utils package.'
-        }
-    except UnboundLocalError:
-        return {
-            'valid': False,
-            'message': 'Game validator package not installed. Could not find c4utils package.'
+            'message': f'Game validator package not installed. Please install c4utils package. Error: {str(e)}'
         }
     except Exception as e:
         return {

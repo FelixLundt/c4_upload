@@ -1,8 +1,11 @@
 import os
 from pathlib import Path
-
+from dotenv import load_dotenv
 # Get the webapp root directory (where .env is located)
 WEBAPP_ROOT = Path(__file__).parent.parent
+
+# Load environment variables from .env file
+load_dotenv()
 
 class Config:
     # Flask settings
@@ -11,27 +14,25 @@ class Config:
     
     # Google Cloud Storage settings
     STORAGE_BUCKET = 'c4league'
-    STORAGE_KEY_PATH = os.environ.get(
-        'GOOGLE_APPLICATION_CREDENTIALS',
-        os.path.join(os.path.dirname(os.path.dirname(__file__)), 'connect4-service-key.json')
-    )
+    # In development, use service key file; in production, use default credentials
+    STORAGE_KEY_PATH = os.environ.get('GOOGLE_APPLICATION_CREDENTIALS') if not os.getenv('GAE_ENV', '').startswith('standard') else None
 
     # Validator settings
-    # In development: '../c4utils' relative to webapp root
-    # In deployment: '.' (current directory)
-    VALIDATOR_PATH = str(WEBAPP_ROOT / os.environ.get('C4UTILS_PATH', '../c4utils'))
+    # Only used in development to find c4utils package
+    VALIDATOR_PATH = str(WEBAPP_ROOT / os.environ.get('C4UTILS_PATH', '../c4utils')) if not os.getenv('GAE_ENV', '').startswith('standard') else None
 
     # Group settings
     ALLOWED_GROUPS = {
-        'team1': {
-            'name': 'Team 1',
+        os.environ.get('TEAM1_ID'): {
+            'name': os.environ.get('TEAM1_NAME'),
             'password': os.environ.get('TEAM1_PASSWORD')
         },
-        'team2': {
-            'name': 'Team 2',
+        os.environ.get('TEAM2_ID'): {
+            'name': os.environ.get('TEAM2_NAME'),
             'password': os.environ.get('TEAM2_PASSWORD')
         }
     }
  
-    # You can add more configuration sections as needed:
-    # Tournament settings, etc. 
+    DOMAIN = os.environ.get('DOMAIN', 'localhost')  # Default to 'localhost' if not set 
+
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'default-secret-key')

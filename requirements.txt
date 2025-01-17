@@ -1,5 +1,7 @@
 flask>=2.0.0
 google-cloud-storage>=2.0.0
+google-cloud-logging>=3.0.0
 python-dotenv>=0.19.0
 pytest>=7.0.0  # For running tests
+pytest-cov>=4.1.0  # For test coverage reporting
 ../c4utils/c4utils/  # Local package for development

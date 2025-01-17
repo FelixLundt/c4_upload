@@ -1,11 +1,46 @@
 import datetime
 import os
 from google.cloud import storage
-from flask import current_app
+from flask import current_app, g
+from google.cloud.logging import Client
 
-def init_storage_client():
-    """Initialize storage client using config settings"""
-    return storage.Client.from_service_account_json(current_app.config['STORAGE_KEY_PATH'])
+def get_clients():
+    """Get or initialize storage and logging clients using config settings"""
+    if 'storage_client' not in g:
+        key_path = current_app.config['STORAGE_KEY_PATH']
+        
+        # Initialize storage client
+        if key_path:
+            # Development: use service account key file
+            g.storage_client = storage.Client.from_service_account_json(key_path)
+            g.logging_client = Client.from_service_account_json(key_path)
+        else:
+            # Production: use default credentials
+            g.storage_client = storage.Client()
+            g.logging_client = Client()
+        
+        # Set up logger
+        if current_app.debug:
+            g.logger = current_app.logger
+        else:
+            g.logger = g.logging_client.logger("app-log")
+            
+    return g.storage_client, g.logger
+
+def log_message(logger, message, severity="INFO", component="storage"):
+    """Log message using either Cloud Logging or Flask logger"""
+    # Check if it's a Cloud Logger by checking for log_struct method
+    if hasattr(logger, 'log_struct'):
+        logger.log_struct({
+            "message": message,
+            "severity": severity,
+            "component": component
+        })
+    else:
+        if severity == "ERROR":
+            logger.error(f"{component}: {message}")
+        else:
+            logger.info(f"{component}: {message}")
 
 def save_submission(submission_file, group_id):
     """
@@ -19,8 +54,10 @@ def save_submission(submission_file, group_id):
         str: The path where the file was stored
     """
     try:
-        client = init_storage_client()
-        bucket = client.bucket(current_app.config['STORAGE_BUCKET'])
+        storage_client, logger = get_clients()
+        log_message(logger, f"Saving submission for group {group_id}", "INFO", "storage")
+        
+        bucket = storage_client.bucket(current_app.config['STORAGE_BUCKET'])
         
         # Create path with group ID, timestamp and filename
         timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -31,9 +68,12 @@ def save_submission(submission_file, group_id):
         blob = bucket.blob(storage_path)
         blob.upload_from_file(submission_file)
         
+        log_message(logger, f"Submission saved successfully for group {group_id}", "INFO", "storage")
+
         return storage_path
     except Exception as e:
-        current_app.logger.error(f"Storage error: {str(e)}")
+        _, logger = get_clients()
+        log_message(logger, f"Storage error: {str(e)}", "ERROR", "storage")
         raise
 
 def get_group_submissions(group_id):
@@ -43,8 +83,8 @@ def get_group_submissions(group_id):
     Returns:
         list[dict]: List of submissions with timestamp and filename
     """
-    client = init_storage_client()
-    bucket = client.bucket(current_app.config['STORAGE_BUCKET'])
+    storage_client, _ = get_clients()
+    bucket = storage_client.bucket(current_app.config['STORAGE_BUCKET'])
     
     # List all blobs in group's directory
     prefix = f'submissions/{group_id}/'
@@ -70,8 +110,8 @@ def delete_oldest_submission(group_id):
     """Delete the oldest submission for a group"""
     submissions = get_group_submissions(group_id)
     if submissions:
-        client = init_storage_client()
-        bucket = client.bucket(current_app.config['STORAGE_BUCKET'])
+        storage_client, _ = get_clients()
+        bucket = storage_client.bucket(current_app.config['STORAGE_BUCKET'])
         blob = bucket.blob(submissions[-1]['path'])
         blob.delete()
 
@@ -91,11 +131,12 @@ def delete_submission(group_id, path):
     if not path.startswith(f'submissions/{group_id}/'):
         return False
         
-    client = init_storage_client()
-    bucket = client.bucket(current_app.config['STORAGE_BUCKET'])
+    storage_client, logger = get_clients()
+    bucket = storage_client.bucket(current_app.config['STORAGE_BUCKET'])
     blob = bucket.blob(path)
     
     if blob.exists():
         blob.delete()
+        log_message(logger, f"Submission deleted successfully for group {group_id}", "INFO", "storage")
         return True
     return False

@@ -6,13 +6,14 @@ bp = Blueprint('auth', __name__)
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        group_id = request.form['group_id']
+        group_name = request.form['group_name']
         password = request.form['password']
+        import os
+
         
-        if group_id in Config.ALLOWED_GROUPS:
-            if password == Config.ALLOWED_GROUPS[group_id]['password']:
-                session['group_id'] = group_id
-                session['group_name'] = Config.ALLOWED_GROUPS[group_id]['name']
+        if group_name in Config.ALLOWED_GROUPS:
+            if password == Config.ALLOWED_GROUPS[group_name]['password']:
+                session['group_name'] = group_name
                 return redirect(url_for('upload.upload'))
             else:
                 flash('Invalid password')

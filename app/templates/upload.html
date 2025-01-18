@@ -1,10 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Upload Your Connect 4 Agent</h1>
-
 <div class="instructions">
-    <h2>Submission Instructions</h2>
+    <h2>Upload Your Connect 4 Agent</h2>
+    <p>You can submit up to 2 different agents. Previously uploaded agents can be updated at any time. If you want to submit a new agent, you must delete an existing one. </p>
     <p>Please submit a ZIP file containing:</p>
     <ul>
         <li><code>requirements.txt</code> in the root directory</li>
@@ -25,33 +24,34 @@ submission.zip/
     └── utils.py</pre>
 </div>
 
-{% if submissions %}
-<div class="current-submissions">
-    <h2>Your Current Submissions ({{ submissions|length }}/{{ submission_limit }})</h2>
-    {% if submissions|length >= submission_limit %}
-    <p class="warning">Uploading a new agent will delete your oldest submission.</p>
+{% if agents %}
+<div class="current-agents">
+    <h2>Your Agents ({{ agents|length }}/2)</h2>
+    {% if agents|length >= 2 %}
+    <p class="warning">You've reached the maximum number of agents. Please delete one to upload a new one.</p>
     {% endif %}
     
     <ul class="submissions-list">
-    {% for sub in submissions %}
+    {% for agent in agents %}
         <li>
             <div class="submission-info">
-                <span class="submission-name">{{ sub.filename }}</span>
-                <span class="submission-time">Uploaded: {{ sub.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                <span class="agent-name">{{ agent.name }} (version #{{ agent.version }})</span>
             </div>
-            <form action="{{ url_for('upload.delete_submission_route', submission_path=sub.path) }}" 
-                  method="post" 
-                  class="delete-form"
-                  onsubmit="return confirm('Are you sure you want to delete this submission?');">
-                <button type="submit" class="delete-button">Delete</button>
-            </form>
+            <div class="action-buttons">
+                <form method="post" enctype="multipart/form-data">
+                    <input type="file" name="submission" accept=".zip" class="hidden-file-input" id="file-{{ agent.name }}">
+                    <input type="hidden" name="agent_name" value="{{ agent.name }}">
+                    <button type="button" class="update-button" onclick="document.getElementById('file-{{ agent.name }}').click()">Update</button>
+                    <button type="submit" class="delete-button" onclick="return confirm('Are you sure you want to delete this agent?');" formaction="{{ url_for('upload.delete_agent_route', agent_name=agent.name) }}">Delete</button>
+                </form>
+            </div>
         </li>
     {% endfor %}
     </ul>
 </div>
 {% else %}
-<div class="current-submissions">
-    <h2>Your Submissions (0/{{ submission_limit }})</h2>
+<div class="current-agents">
+    <h2>Your Agents (0/2)</h2>
     <p>You haven't uploaded any agents yet.</p>
 </div>
 {% endif %}
@@ -64,16 +64,38 @@ submission.zip/
     {% endif %}
 {% endwith %}
 
+{% if agents|length < 2 %}
+<h2>Upload New Agent</h2>
 <form method="post" enctype="multipart/form-data">
     <div>
-        <label for="submission">Agent Submission (ZIP file):</label>
+        <label for="agent_name">Agent Name:</label>
+        <input type="text" id="agent_name" name="agent_name" required pattern="[a-zA-Z0-9_-]+" 
+               title="Use only letters, numbers, underscores, and hyphens">
+        <p class="help">Give your agent a unique name (e.g., "minimax" or "mcts-agent").
+            Don't include a version number, that will be added automatically.
+        </p>
+    </div>
+    <div>
+        <label for="submission">Agent Code (ZIP file):</label>
         <input type="file" id="submission" name="submission" accept=".zip" required>
     </div>
     
-    <button type="submit">Upload</button>
+    <button type="submit">Upload Agent</button>
 </form>
+{% endif %}
 
 <div class="logout-container">
-    <a href="{{ url_for('auth.logout') }}" class="button logout">Cancel / Logout</a>
+    <a href="{{ url_for('auth.logout') }}" class="button logout">Logout</a>
 </div>
+
+<script>
+// Auto-submit form when file is selected for update
+document.querySelectorAll('.hidden-file-input').forEach(input => {
+    input.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            this.closest('form').submit();
+        }
+    });
+});
+</script>
 {% endblock %}

@@ -23,17 +23,17 @@ def test_login_page_loads(client):
 def test_successful_login(client):
     """Test successful login with correct credentials."""
     response = client.post('/login', data={
-        'group_id': 'team1',
+        'group_name': 'team1',
         'password': Config.ALLOWED_GROUPS['team1']['password']
     }, follow_redirects=True)
     assert response.status_code == 200
     with client.session_transaction() as sess:
-        assert sess['group_id'] == 'team1'
+        assert sess['group_name'] == 'team1'
 
 def test_failed_login_wrong_password(client):
     """Test login failure with wrong password."""
     response = client.post('/login', data={
-        'group_id': 'team1',
+        'group_name': 'team1',
         'password': 'wrong_password'
     }, follow_redirects=True)
     assert response.status_code == 200
@@ -42,7 +42,7 @@ def test_failed_login_wrong_password(client):
 def test_failed_login_invalid_group(client):
     """Test login failure with non-existent group."""
     response = client.post('/login', data={
-        'group_id': 'nonexistent_team',
+        'group_name': 'nonexistent_team',
         'password': 'any_password'
     }, follow_redirects=True)
     assert response.status_code == 200
@@ -60,4 +60,4 @@ def test_logout(client):
     response = client.get('/logout', follow_redirects=True)
     assert response.status_code == 200
     with client.session_transaction() as sess:
-        assert 'group_id' not in sess 
+        assert 'group_name' not in sess 

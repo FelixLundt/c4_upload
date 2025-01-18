@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 WEBAPP_ROOT = Path(__file__).parent.parent
 
 # Load environment variables from .env file
-load_dotenv()
+load_dotenv(override=True)
 
 class Config:
     # Flask settings
@@ -22,16 +22,17 @@ class Config:
     VALIDATOR_PATH = str(WEBAPP_ROOT / os.environ.get('C4UTILS_PATH', '../c4utils')) if not os.getenv('GAE_ENV', '').startswith('standard') else None
 
     # Group settings
-    ALLOWED_GROUPS = {
-        os.environ.get('TEAM1_ID'): {
-            'name': os.environ.get('TEAM1_NAME'),
-            'password': os.environ.get('TEAM1_PASSWORD')
-        },
-        os.environ.get('TEAM2_ID'): {
-            'name': os.environ.get('TEAM2_NAME'),
-            'password': os.environ.get('TEAM2_PASSWORD')
-        }
-    }
+    ALLOWED_GROUPS = {}
+    for key, value in os.environ.items():
+        if key.startswith('TEAM') and key.endswith('_NAME'):
+            team_number = key.split('_', maxsplit=1)[0][4:]  # Extract the team number
+            team_name = value
+            team_password = os.environ.get(f'TEAM{team_number}_PASSWORD')
+            ALLOWED_GROUPS[team_name] = {
+                'name': team_name,
+                'password': team_password
+            }
+    
  
     DOMAIN = os.environ.get('DOMAIN', 'localhost')  # Default to 'localhost' if not set 
 

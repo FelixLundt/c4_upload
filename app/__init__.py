@@ -1,8 +1,6 @@
 from flask import Flask
 from app.config import Config
-from dotenv import load_dotenv
 
-load_dotenv()  # Load environment variables from .env file
 
 def create_app():
     app = Flask(__name__)

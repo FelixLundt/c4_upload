@@ -1,16 +1,20 @@
 import secrets
 import string
-
+import re
 def generate_password(length=12):
     """Generate a secure random password"""
     alphabet = string.ascii_letters + string.digits
     return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 def generate_group():
-    group_id = input("Enter group ID (e.g., team1): ").strip()
-    group_name = input("Enter group name [optional]: ").strip()
-    if not group_name:
-        group_name = group_id.title()
+    group_name = '/'
+    while True:
+        group_name = input("Enter group name (e.g., team1): ").strip()
+        # Validate group name
+        if not re.match(r'^[A-Za-z0-9-]+$', group_name):
+            print("Group name can only contain letters, numbers, and hyphens")
+            continue
+        break
     
     password = generate_password()
     

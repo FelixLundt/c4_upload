@@ -1,7 +1,9 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, session, current_app
-from app.validator import validate_submission
-from app.storage import save_submission, get_group_submissions, delete_oldest_submission, delete_submission, log_message, get_clients
+from werkzeug.utils import secure_filename
 from functools import wraps
+import re
+from ..storage import get_clients, save_agent, delete_agent, get_team_agents, log_message
+from ..validator import validate_submission
 
 bp = Blueprint('upload', __name__)
 
@@ -9,7 +11,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         try:
-            if not session.get('group_id'):
+            if not session.get('group_name'):
                 flash('Please log in first')
                 return redirect(url_for('auth.login'))
         except RuntimeError as e:
@@ -25,70 +27,101 @@ def login_required(f):
 @bp.route('/upload', methods=['GET', 'POST'])
 @login_required
 def upload():
-    # Get current submissions
-    submissions = get_group_submissions(session['group_id'])
+    # Get current agents and initialize logging
     storage_client, logger = get_clients()
+    group_name = session['group_name']
+    agents = get_team_agents(group_name)
     
     if request.method == 'POST':
-        log_message(logger, f"Upload request received for group {session['group_id']}", "INFO", "upload")
-
-        if 'submission' not in request.files:
-            flash('Missing submission file')
-            log_message(logger, f"Missing submission file for group {session['group_id']}", "ERROR", "upload")
-            return redirect(request.url)
-            
-        submission = request.files['submission']
+        log_message(logger, f"Upload request received from {group_name}", "INFO", "upload")
         
-        if submission.filename == '':
-            flash('No selected file')
-            log_message(logger, f"No selected file for group {session['group_id']}", "ERROR", "upload")
+        if 'submission' not in request.files:
+            flash('No file uploaded')
+            log_message(logger, "No file in request", "ERROR", "upload")
             return redirect(request.url)
-            
-        if not submission.filename.endswith('.zip'):
-            flash('Submission must be a ZIP file')
-            log_message(logger, f"Submission must be a ZIP file for group {session['group_id']}", "ERROR", "upload")
+        
+        file = request.files['submission']
+        if file.filename == '':
+            flash('No file selected')
+            log_message(logger, "Empty filename", "ERROR", "upload")
             return redirect(request.url)
-            
-        # Check submission limit
-        if len(submissions) >= 2:
-            # Delete oldest submission
-            log_message(logger, f"Submission limit reached for group {session['group_id']}", "INFO", "upload")
-            delete_oldest_submission(session['group_id'])
-            flash('Oldest submission was deleted due to limit')
+        
+        if not file.filename.endswith('.zip'):
+            flash('Please upload a ZIP file')
+            log_message(logger, "Invalid file type", "ERROR", "upload")
+            return redirect(request.url)
+        
+        if 'agent_name' not in request.form:
+            flash('Please provide a name for your agent')
+            log_message(logger, "No agent name provided", "ERROR", "upload")
+            return redirect(request.url)
+        
+        agent_name = secure_filename(request.form['agent_name'].strip())
+        # Validate agent name
+        if not re.match(r'^[A-Za-z0-9-]+$', agent_name):
+            flash('Agent name can only contain letters, numbers, and hyphens')
+            log_message(logger, "Invalid agent name", "ERROR", "upload")
+            return redirect(request.url)
+        
+        if not agent_name:
+            flash('Agent name cannot be empty')
+            log_message(logger, "Empty agent name", "ERROR", "upload")
+            return redirect(request.url)
 
+        
+        
+        # Check if this is an update or new upload
+        is_update = any(agent['name'] == agent_name for agent in agents)
+        
+        if not is_update:
+            # Check if we're at the agent limit for new uploads
+            if len(agents) >= 2:
+                flash('You can only have up to 2 agents. Please delete one first.')
+                log_message(logger, f"Agent limit reached for {group_name}", "INFO", "upload")
+                return redirect(request.url)
+        
         # Read the entire file for validation
-        zip_content = submission.read()
+        zip_content = file.read()
         
         # Validate submission
         validation_result = validate_submission(zip_content)
         if not validation_result['valid']:
-            flash(validation_result['message'])
-            log_message(logger, f"Submission validation failed for group {session['group_id']}: {validation_result['message']}", "ERROR", "upload")
+            flash(f"Invalid submission: {validation_result['message']}")
+            log_message(logger, f"Validation failed: {validation_result['message']}", "ERROR", "upload")
             return redirect(request.url)
         
-        # Save submission
-        try:
-            submission.seek(0)
-            storage_path = save_submission(submission, session['group_id'])
-            flash('Submission uploaded successfully')
-            
-            return redirect(url_for('upload.upload'))
-        except Exception as e:
-            flash(f'Error saving submission: {str(e)}')
-            return redirect(request.url)
+        # Reset file pointer after validation
+        file.seek(0)
+        
+        # Save the agent
+        storage_path = save_agent(file, group_name, agent_name, is_update)
+        if storage_path:
+            if is_update:
+                flash(f'Agent "{agent_name}" updated successfully')
+                log_message(logger, f"Agent {agent_name} updated successfully", "INFO", "upload")
+            else:
+                flash(f'Agent "{agent_name}" uploaded successfully')
+                log_message(logger, f"Agent {agent_name} uploaded successfully", "INFO", "upload")
+        else:
+            flash('Error saving agent')
+            # save_agent already logs the error
+        print(agents)
+        return redirect(url_for('upload.upload'))
     
-    return render_template('upload.html', 
-                         submissions=submissions,
-                         submission_limit=2) 
+    return render_template('upload.html',
+                         agents=agents)
 
-@bp.route('/delete/<path:submission_path>', methods=['POST'])
+@bp.route('/delete/<agent_name>', methods=['POST'])
 @login_required
-def delete_submission_route(submission_path):
+def delete_agent_route(agent_name):
     storage_client, logger = get_clients()
-    if delete_submission(session['group_id'], submission_path):
-        flash('Submission deleted successfully')
-        log_message(logger, f"Submission deleted successfully for group {session['group_id']}", "INFO", "upload")
+    group_name = session['group_name']
+    
+    if delete_agent(group_name, agent_name):
+        flash('Agent deleted successfully')
+        log_message(logger, f"Agent {agent_name} deleted successfully", "INFO", "upload")
     else:
-        flash('Error deleting submission')
-        log_message(logger, f"Error deleting submission for group {session['group_id']}", "ERROR", "upload")
+        flash('Error deleting agent')
+        # delete_agent already logs the error
+    
     return redirect(url_for('upload.upload'))

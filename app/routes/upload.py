@@ -95,6 +95,7 @@ def upload():
         
         # Save the agent
         storage_path = save_agent(file, group_name, agent_name, is_update)
+  
         if storage_path:
             if is_update:
                 flash(f'Agent "{agent_name}" updated successfully')

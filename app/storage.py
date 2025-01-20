@@ -59,7 +59,13 @@ def save_agent(file, group_name, agent_name, is_update):
         if len(agent_version) == 0 and is_update:
             raise KeyError('Agent unknown, can\'t update.')
         if len(agent_version) > 0 and not is_update:
-            raise KeyError('Agent already exists, can\'t upload.')
+            raise KeyError('Agent already exists, update instead.')
+        if is_update:
+            log_message(logger, f"Attempting to delete old version of {agent_name}", "INFO")
+            delete_success = delete_agent(group_name, agent_name)
+            if not delete_success:
+                raise RuntimeError("Failed to delete old version")
+            log_message(logger, "Old version deleted successfully", "INFO")
         new_version = int(agent_version[0]) + 1 if is_update else 1
         blob_path = f"submissions/{group_name}/{agent_name}/{agent_name}_v{new_version}.zip"
         blob = bucket.blob(blob_path)
@@ -80,10 +86,17 @@ def delete_agent(group_name, agent_name):
         storage_client, logger = get_clients()
         bucket = get_bucket()
         prefix = f"submissions/{group_name}/{agent_name}/"
+        log_message(logger, f"Searching for blobs with prefix: {prefix}", "INFO")
         blobs = bucket.list_blobs(prefix=prefix)
+        blob_count = 0
         for blob in blobs:
+            log_message(logger, f"Deleting blob: {blob.name}", "INFO")
             blob.delete()
-        log_message(logger, f"Agent {agent_name} deleted successfully for team {group_name}")
+            blob_count += 1
+        if blob_count == 0:
+            log_message(logger, f"No blobs found to delete for prefix: {prefix}", "WARNING")
+            return False
+        log_message(logger, f"Deleted {blob_count} blobs for agent {agent_name}", "INFO")
         return True
     except Exception as e:
         storage_client, logger = get_clients()
@@ -102,7 +115,6 @@ def get_team_agents(group_name):
         blobs = bucket.list_blobs(prefix=team_prefix)
         agents = []
         for blob in blobs:
-            print(blob.name)
             # Extract agent name from prefix (submissions/group_name/agent_name/agent-name_v1.zip)
             agent_name_version = blob.name.split('/')[-1].strip('.zip')
             agent_name, version = agent_name_version.split('_')

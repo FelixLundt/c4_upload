@@ -7,6 +7,8 @@ import tempfile
 from flask import current_app
 import os
 
+VALIDATION_TIMEOUT = 30.
+
 def validate_submission(zip_content: bytes) -> Dict[str, Any]:
     """
     Validates a zipped submission by checking:
@@ -90,7 +92,7 @@ def validate_submission(zip_content: bytes) -> Dict[str, Any]:
                         }
                     
                     # Validate against game interface
-                    valid, error = connect4_validator.validate_agent_function(agent_module.generate_move)
+                    valid, error = connect4_validator.validate_agent_function(agent_module.generate_move, VALIDATION_TIMEOUT)
                     if error is not None:
                         return {
                             'valid': False,
